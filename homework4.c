@@ -1,13 +1,15 @@
 #include <ti/devices/msp432p4xx/driverlib/driverlib.h>
 #include "homework4.h"
 
+//typedef enum {}
+
 int main(void)
 {
     char rChar;
     char *response = "\n\n\r2534 is the best course in the curriculum!\r\n\n";
 
     // TODO: Declare the variables that main uses to interact with your state machine.
-    bool finished;
+    bool finished = false;
 
     // Stops the Watchdog timer.
     initBoard();
@@ -41,21 +43,23 @@ int main(void)
     {
         // TODO: Check the receive interrupt flag to see if a received character is available.
         //       Return 0xFF if no character is available.
-        if (UART_getInterruptStatus (EUSCI_A0_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG)
-                        == EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG)
-                    {
+        if (UART_getInterruptStatus (EUSCI_A0_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG) == EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG)
                     rChar = UART_receiveData(EUSCI_A0_BASE);
+        else
+            rChar = 0xFF;
 
         // TODO: If an actual character was received, echo the character to the terminal AND use it to update the FSM.
         //       Check the transmit interrupt flag prior to transmitting the character.
-
-
-
+        if (rChar != 0xFF)
+        {
+            UART_getInterruptStatus (EUSCI_A0_BASE, EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG == EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG)
+            UART_transmitData(EUSCI_A0_BASE, rChar);
+        }
         // TODO: If the FSM indicates a successful string entry, transmit the response string.
         //       Check the transmit interrupt flag prior to transmitting each character and moving on to the next one.
         //       Make sure to reset the success variable after transmission.
-
-
+        if (rChar == UART_receiveData(EUSCI_A0_BASE))
+            UART_getInterruptStatus (EUSCI_A0_BASE, EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG == EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG)
     }
 }
 

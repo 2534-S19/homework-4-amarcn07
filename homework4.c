@@ -7,28 +7,44 @@ int main(void)
     char *response = "\n\n\r2534 is the best course in the curriculum!\r\n\n";
 
     // TODO: Declare the variables that main uses to interact with your state machine.
-
+    bool finished;
 
     // Stops the Watchdog timer.
     initBoard();
     // TODO: Declare a UART config struct as defined in uart.h.
     //       To begin, configure the UART for 9600 baud, 8-bit payload (LSB first), no parity, 1 stop bit.
-
+     eUSCI_UART_ConfigV1 uartConfig =
+    {
+        EUSCI_A_UART_CLOCKSOURCE_SMCLK,                      //ClockSource = 3MHz
+        19,                                                  //Clock PreScaler = 19 (Quotient)
+        8,                                                   //First Mod Reg = 8 (Remainder)
+        0x55,                                                //UCBRSx = 0x55, N = 0.4378
+        EUSCI_A_UART_NO_PARITY,                              //No Parity
+        EUSCI_A_UART_LSB_FIRST,                              //LSB first
+        EUSCI_A_UART_ONE_STOP_BIT,                           //1 Stop bit
+        EUSCI_A_UART_MODE,                                   //UART Mode
+        EUSCI_A_UART_OVERSAMPLING_BAUDRATE_GENERATION,       //Oversampling
+        EUSCI_A_UART_8_BIT_LEN,                              //8-bit payload (Data length)
+    };
 
     // TODO: Make sure Tx AND Rx pins of EUSCI_A0 work for UART and not as regular GPIO pins.
-
+     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1, GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION);
+     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P1, GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
 
     // TODO: Initialize EUSCI_A0
-
+     UART_initModule(EUSCI_A0_BASE, &uartConfig);
 
     // TODO: Enable EUSCI_A0
-
+     UART_enableModule(EUSCI_A0_BASE);
 
     while(1)
     {
         // TODO: Check the receive interrupt flag to see if a received character is available.
         //       Return 0xFF if no character is available.
-
+        if (UART_getInterruptStatus (EUSCI_A0_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG)
+                        == EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG)
+                    {
+                    rChar = UART_receiveData(EUSCI_A0_BASE);
 
         // TODO: If an actual character was received, echo the character to the terminal AND use it to update the FSM.
         //       Check the transmit interrupt flag prior to transmitting the character.

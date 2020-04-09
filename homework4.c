@@ -1,8 +1,6 @@
 #include <ti/devices/msp432p4xx/driverlib/driverlib.h>
 #include "homework4.h"
 
-//typedef enum {}
-
 int main(void)
 {
     char rChar;
@@ -10,6 +8,7 @@ int main(void)
 
     // TODO: Declare the variables that main uses to interact with your state machine.
     bool finished = false;
+    int i;
 
     // Stops the Watchdog timer.
     initBoard();
@@ -51,15 +50,27 @@ int main(void)
         // TODO: If an actual character was received, echo the character to the terminal AND use it to update the FSM.
         //       Check the transmit interrupt flag prior to transmitting the character.
         if (rChar != 0xFF)
-        {
-            UART_getInterruptStatus (EUSCI_A0_BASE, EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG == EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG)
-            UART_transmitData(EUSCI_A0_BASE, rChar);
-        }
+          if (UART_getInterruptStatus (EUSCI_A0_BASE, EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG) == EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG)
+         {
+            finished = charFSM(rChar);
+            if(!finished)
+            {
+                UART_transmitData(EUSCI_A0_BASE, rChar);
+            }
+
         // TODO: If the FSM indicates a successful string entry, transmit the response string.
         //       Check the transmit interrupt flag prior to transmitting each character and moving on to the next one.
         //       Make sure to reset the success variable after transmission.
-        if (rChar == UART_receiveData(EUSCI_A0_BASE))
-            UART_getInterruptStatus (EUSCI_A0_BASE, EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG == EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG)
+        if (finished) //charFSM(rChar) == false)
+            if (UART_getInterruptStatus (EUSCI_A0_BASE, EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG) == EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG)
+            {
+                for(i=0; i < 49 ;i++)
+                {
+                   UART_transmitData(EUSCI_A0_BASE, response[i]);
+                }
+         // finished = false;
+            }
+         }
     }
 }
 
@@ -71,8 +82,38 @@ void initBoard()
 // TODO: FSM for detecting character sequence.
 bool charFSM(char rChar)
 {
-    bool finished = false;
+   typedef enum {nullstate, state2, state25, state253, state2534} numbers;
 
+   static numbers currentstate = nullstate;
+   bool finished = false;
 
+   switch (currentstate){
+       case nullstate:
+           if (rChar == '2')
+               currentstate =  state2;
+           break;
+       case state2:
+           if (rChar == '5')
+               currentstate = state25;
+           else
+               currentstate = nullstate;
+           break;
+       case state25:
+           if(rChar == '3')
+               currentstate = state253;
+           else
+               currentstate = nullstate;
+           break;
+       case state253:
+           if(rChar == '4')
+               currentstate = state2534;
+               else
+                   currentstate = nullstate;
+           break;
+       case state2534:
+                finished = true;
+                currentstate = nullstate;
+                break;
+   }
     return finished;
 }

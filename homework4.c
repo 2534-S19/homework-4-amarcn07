@@ -52,23 +52,20 @@ int main(void)
         if (rChar != 0xFF)
           if (UART_getInterruptStatus (EUSCI_A0_BASE, EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG) == EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG)
          {
-            finished = charFSM(rChar);
-            if(!finished)
-            {
-                UART_transmitData(EUSCI_A0_BASE, rChar);
-            }
+              UART_transmitData(EUSCI_A0_BASE, rChar);
+              finished = charFSM(rChar);
 
         // TODO: If the FSM indicates a successful string entry, transmit the response string.
         //       Check the transmit interrupt flag prior to transmitting each character and moving on to the next one.
         //       Make sure to reset the success variable after transmission.
-        if (finished) //charFSM(rChar) == false)
+        while (finished) //charFSM(rChar) == true)
             if (UART_getInterruptStatus (EUSCI_A0_BASE, EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG) == EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG)
             {
-                for(i=0; i < 49 ;i++)
+                for(i = 0; i < 49 ; i++)
                 {
                    UART_transmitData(EUSCI_A0_BASE, response[i]);
                 }
-         // finished = false;
+                finished = false;
             }
          }
     }
@@ -82,38 +79,39 @@ void initBoard()
 // TODO: FSM for detecting character sequence.
 bool charFSM(char rChar)
 {
-   typedef enum {nullstate, state2, state25, state253, state2534} numbers;
+   typedef enum {state2, state25, state253, state2534} numbers;
 
-   static numbers currentstate = nullstate;
+   static numbers currentstate = state2;
    bool finished = false;
 
    switch (currentstate){
-       case nullstate:
-           if (rChar == '2')
-               currentstate =  state2;
-           break;
        case state2:
-           if (rChar == '5')
-               currentstate = state25;
-           else
-               currentstate = nullstate;
+           if (rChar == '2')
+               currentstate =  state25;
            break;
        case state25:
-           if(rChar == '3')
+           if (rChar == '5')
                currentstate = state253;
+           else if (rChar == '2')
+               currentstate = state25;
            else
-               currentstate = nullstate;
+               currentstate = state2;
            break;
        case state253:
-           if(rChar == '4')
+           if(rChar == '3')
                currentstate = state2534;
-               else
-                   currentstate = nullstate;
+           else if (rChar == '2')
+               currentstate = state25;
+           else
+               currentstate = state2;
            break;
        case state2534:
-                finished = true;
-                currentstate = nullstate;
-                break;
+           if(rChar == '4')
+           {
+               currentstate = state2;
+               finished = true;
+           }
+           break;
    }
     return finished;
 }
